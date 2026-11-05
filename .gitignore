@@ -1,0 +1,11 @@
+# Drafts and templates stay local, never deployed
+writing/post-template.html
+writing/_*
+GO-LIVE.md
+*-backup.html
+*-v1-backup.html
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp

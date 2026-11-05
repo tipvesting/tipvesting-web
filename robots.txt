@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /writing/post-template.html
+Disallow: /writing/_
+
+Sitemap: https://tipvesting.ca/sitemap.xml

@@ -488,6 +488,11 @@ a.post:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color
 .chip--live{background:rgba(109,138,97,.16);color:var(--leaf-dark)}
 .ledger-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 2.5rem}
 @media(max-width:700px){.ledger-grid{grid-template-columns:1fr;gap:0}}
+@media(max-width:520px){
+  .ledger-grid .rline{display:grid;grid-template-columns:1fr;gap:.1rem;padding:.6rem 0;border-bottom:1px dotted var(--line)}
+  .ledger-grid .rline .dots{display:none}
+  .ledger-grid .rline .val{font-size:1.02rem;white-space:normal}
+}
 .ledger-foot{margin-top:1.5rem;padding-top:1.2rem;border-top:1.5px dashed var(--line);
   font-family:var(--serif);font-size:1.15rem;font-weight:600;color:var(--leaf-dark)}
 
@@ -503,8 +508,10 @@ a.post:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color
   line-height:1.05;color:var(--leaf-dark)}
 .stat .l{font-family:var(--mono);font-size:.58rem;letter-spacing:.14em;
   text-transform:uppercase;color:var(--muted);margin-top:.3rem}
-.divi-chart svg{width:100%;height:auto;display:block;overflow:visible}
-.divi-chart .lbl-x{font-family:var(--mono);font-size:15px;fill:var(--muted)}
+.divi-chart{width:100%}
+.divi-chart svg{display:block;max-width:100%;height:auto;overflow:visible}
+.divi-chart .lbl-x{font-family:var(--mono);font-size:12px;fill:var(--muted)}
+.divi-chart .lbl-v{font-family:var(--mono);font-size:12px;font-weight:700;fill:var(--amber-text)}
 .divi-note{font-family:var(--mono);font-size:.6rem;color:var(--muted);
   margin:1.1rem 0 0;line-height:1.6}
 
@@ -535,6 +542,9 @@ a.post:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color
 .signoff span{color:var(--wood-light);font-style:italic}
 .disclaim{max-width:64ch;line-height:1.65;font-size:.78rem;opacity:.7;margin:0}
 .foot hr{border:0;border-top:1px solid rgba(244,238,228,.14);margin:0}
+.foot-nav{display:flex;flex-wrap:wrap;gap:.55rem 1.6rem}
+.foot-nav a{color:rgba(244,238,228,.86);text-decoration:none;font-weight:600;font-size:.88rem}
+.foot-nav a:hover,.foot-nav a:focus-visible{color:var(--wood-light);text-decoration:underline;text-underline-offset:3px}
 
 @media(prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
@@ -569,7 +579,7 @@ a.post:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color
     <a href="#experiment">The experiment</a>
     <a href="#writing">Writing</a>
     <a href="#ledger">The ledger</a>
-    <a href="#shelf">Shelf</a>
+    <a href="#shelf" id="navShelf">Shelf</a>
   </div>
   <div class="nav-cta">
     <a class="btn btn--outline btn--sm" href="#newsletter">Join updates</a>
@@ -745,6 +755,7 @@ a.post:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color
   <div class="foot-in">
     <p class="signoff">Let's <span>tip ourselves.</span></p>
     <hr>
+    <nav class="foot-nav" id="footNav" aria-label="Footer"></nav>
     <p class="disclaim"><strong>This is not financial advice.</strong> I'm a person on the internet running an experiment on myself and showing my work. Nothing here is a recommendation to buy any security, and any holding mentioned is simply what I happen to own. Returns shown in the calculator are hypothetical illustrations based on an assumed rate — not a forecast. Real markets go down as well as up. Talk to someone licensed before making decisions with your money.</p>
     <p style="margin:0;font-size:.76rem;opacity:.55">© <span id="yr"></span> TIPVESTING</p>
   </div>
@@ -858,7 +869,7 @@ a.post:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color
   $("ledgerDate").textContent = `Tips through ${L.lastUpdated} · position as of ${L.positionAsOf || L.lastUpdated}`;
   $("ledgerChip").innerHTML = (L.draft || !hasTips)
     ? `<span class="chip chip--draft">Not yet reconciled</span>`
-    : `<span class="chip chip--live">Live</span>`;
+    : `<span class="chip chip--live">Reconciled</span>`;
   $("ledgerRows").innerHTML = [
     ["Months logged",String(L.monthsTracked)],
     ["Actual tips paid", hasTips ? money(L.totalTipped-(L.phantom||0)) : "—"],
@@ -877,43 +888,48 @@ a.post:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color
 
   /* ---------- dividend tracker ---------- */
   const DV = L.dividendHistory || [];
-  if(DV.length){
+  function renderDividends(){
+    if(!DV.length) return;
     const amounts = DV.map(d=>d.amount);
     const total = amounts.reduce((a,b)=>a+b,0);
-    const latest = amounts[amounts.length-1];
-    const first = amounts[0];
-    const max = Math.max(...amounts);
-    const narrow = window.matchMedia('(max-width: 620px)').matches;
-    const W = 620, H = 150, BASE = 118, TOP = 110;
-    const slot = W/DV.length, bw = Math.min(slot*0.56, 38);
+    const latest = amounts[amounts.length-1], first = amounts[0], max = Math.max(...amounts);
+    const host = $("divi");
+    if(!host.dataset.built){
+      host.innerHTML = `
+        <h3>Dividends, growing on their own</h3>
+        <p class="sub">Every distribution gets reinvested rather than pocketed, so the position buys a little more of itself each month.</p>
+        <div class="divi-stats">
+          <div class="stat"><div class="n">${money(total)}</div><div class="l">Received to date</div></div>
+          <div class="stat"><div class="n">${money(latest)}</div><div class="l">Latest month</div></div>
+          <div class="stat"><div class="n">${(latest/first).toFixed(1)}×</div><div class="l">Growth since first payment</div></div>
+        </div>
+        <div class="divi-chart" id="diviChart"></div>
+        <p class="divi-note">${DV[0].label} → ${DV[DV.length-1].label}. Jan 2026 combines two payments that landed either side of a month boundary. Distributions are not guaranteed and can be cut at any time.</p>`;
+      host.dataset.built = "1";
+    }
+    const box = $("diviChart");
+    // Draw at the real pixel width so the labels stay a true 12px at every screen size.
+    const W = Math.max(260, Math.round(box.clientWidth || 600));
+    const H = W < 480 ? 160 : 200, BASE = H-34, TOP = BASE-28;
+    const slot = W/DV.length, bw = Math.max(8, Math.min(slot*0.56, 46));
+    const everyOther = slot < 38;
     const bars = DV.map((d,i)=>{
       const h = max ? (d.amount/max)*TOP : 0;
       const x = i*slot + (slot-bw)/2, y = BASE-h;
       const last = i===DV.length-1;
+      const showLbl = !everyOther || i%2===(DV.length-1)%2;
       return `<g>
         <rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(h,2).toFixed(1)}" rx="4"
-              fill="${last?'var(--amber)':'var(--leaf-mid)'}" opacity="${last?1:0.85}">
-          <title>${d.label}: ${money(d.amount)}</title>
-        </rect>
-        ${(!narrow || i%2===1 || i===DV.length-1) ? `<text class="lbl-x" x="${(x+bw/2).toFixed(1)}" y="${H-12}" text-anchor="middle">${d.short}</text>` : ""}
+              fill="${last?'var(--amber)':'var(--leaf-mid)'}" opacity="${last?1:0.85}"><title>${d.label}: ${money(d.amount)}</title></rect>
+        ${last?`<text class="lbl-v" x="${(x+bw/2).toFixed(1)}" y="${(y-7).toFixed(1)}" text-anchor="middle">${money(d.amount)}</text>`:""}
+        ${showLbl?`<text class="lbl-x" x="${(x+bw/2).toFixed(1)}" y="${H-10}" text-anchor="middle">${d.short}</text>`:""}
       </g>`;
     }).join("");
-    $("divi").innerHTML = `
-      <h3>Dividends, growing on their own</h3>
-      <p class="sub">Every distribution gets reinvested rather than pocketed, so the position buys a little more of itself each month.</p>
-      <div class="divi-stats">
-        <div class="stat"><div class="n">${money(total)}</div><div class="l">Received to date</div></div>
-        <div class="stat"><div class="n">${money(latest)}</div><div class="l">Latest month</div></div>
-        <div class="stat"><div class="n">${(latest/first).toFixed(1)}×</div><div class="l">Growth since first payment</div></div>
-      </div>
-      <div class="divi-chart">
-        <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Monthly dividend payments from ${DV[0].label} to ${DV[DV.length-1].label}, rising from ${money(first)} to ${money(latest)}">
-          <line x1="0" y1="${BASE}" x2="${W}" y2="${BASE}" stroke="var(--line)" stroke-width="1.5"/>
-          ${bars}
-        </svg>
-      </div>
-      <p class="divi-note">${DV[0].label} → ${DV[DV.length-1].label}. Jan 2026 combines two payments that landed either side of a month boundary. Distributions are not guaranteed and can be cut at any time.</p>`;
+    box.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Monthly dividend payments from ${DV[0].label} to ${DV[DV.length-1].label}, rising from ${money(first)} to ${money(latest)}">
+      <line x1="0" y1="${BASE}" x2="${W}" y2="${BASE}" stroke="var(--line)" stroke-width="1.5"/>${bars}</svg>`;
   }
+  renderDividends();
+  let _rt; window.addEventListener("resize",()=>{clearTimeout(_rt);_rt=setTimeout(renderDividends,150)});
 
   /* ---------- posts ---------- */
   const visible = D.posts.filter(p=>p.status==="live").concat(
@@ -942,11 +958,21 @@ a.post:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color
   /* ---------- socials + resources ---------- */
   $("socials").innerHTML = D.socials.map(s=>`<a class="chip-link" href="${s.url}" target="_blank" rel="noopener">${s.name}</a>`).join("");
   const shelf = document.getElementById("shelf");
-  if(!D.showShelf && shelf){ shelf.remove(); }
+  if(!D.showShelf && shelf){ shelf.remove(); const ns=document.getElementById("navShelf"); if(ns) ns.remove(); }
   else $("res").innerHTML = D.resources.map(r=>
     `<a href="${r.url}" target="_blank" rel="noopener sponsored">
        <span class="nm">${r.name}</span><span class="bl">${r.blurb}</span>
        <span class="dots"></span>${r.affiliate?'<span class="aff">Affiliate</span>':''}</a>`).join("");
+
+  /* ---------- footer nav ---------- */
+  const fnav = $("footNav");
+  if(fnav){
+    const here = [["The experiment","#experiment"],["Writing","#writing"],["The ledger","#ledger"],["Join updates","#newsletter"]]
+      .map(([n,h])=>`<a href="${h}">${n}</a>`);
+    const out = (D.socials||[]).map(x=>`<a href="${x.url}" target="_blank" rel="noopener">${x.name}</a>`);
+    const mail = D.contactEmail ? [`<a href="mailto:${D.contactEmail}">Contact</a>`] : [];
+    fnav.innerHTML = [...here, ...out, ...mail].join("");
+  }
 
   /* ---------- newsletter ---------- */
   const form=$("signup");

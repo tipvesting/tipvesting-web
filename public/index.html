@@ -39,18 +39,18 @@ const TIPVESTING = {
   },
 
   ledger: {
-    draft: false,                // reconciled against brokerage Aug 31 2026
-    lastUpdated: "July 2026",
-    positionAsOf: "August 31, 2026",
-    monthsTracked: 11,
-    totalTipped: 1037.74,
+    draft: false,                // position per brokerage Nov 4 2026; tips/dividends through Sept
+    lastUpdated: "September 2026",
+    positionAsOf: "November 4, 2026",
+    monthsTracked: 13,
+    totalTipped: 1427.33,
     phantom: 120.75,             // Japan phantom tips — invested, but nobody received them
-    totalInvested: 1037.74,      // fully caught up: July's tips went in Aug 14
-    bookValue: 1049.58,          // brokerage book value = contributions + reinvested dividends
-    dividends: 15.80,            // 11 payments received, Nov 2025 → Aug 2026
-    dividendsReinvested: 12.56,  // Aug's $3.24 landed after the Aug 14 buy — still cash
-    shares: 15.3394,
-    marketValue: 1174.23,
+    totalInvested: 1427.33,      // fully caught up: Sept's tips go in during Oct
+    bookValue: 1451.96,          // 20.4848 sh x $70.88 avg per brokerage
+    dividends: 19.23,            // TFSA payments Nov 2025 → Sept 2026
+    dividendsReinvested: 19.23,
+    shares: 20.4848,
+    marketValue: 1617.68,
     holding: "VDY",
     // Grouped by payment month. Jan 2026 combines two payments ($0.41 + $0.59).
     dividendHistory: [
@@ -63,7 +63,8 @@ const TIPVESTING = {
       { label:"May 2026", short:"May", amount:2.12 },
       { label:"Jun 2026", short:"Jun", amount:2.27 },
       { label:"Jul 2026", short:"Jul", amount:2.45 },
-      { label:"Aug 2026", short:"Aug", amount:3.24 }
+      { label:"Aug 2026", short:"Aug", amount:3.24 },
+      { label:"Sep 2026", short:"Sep", amount:3.43 }
     ],
     note: "March 2026 includes $120.75 in phantom tips — money I would have tipped in Canada but didn't in Japan, worked out at my usual rates and invested anyway. It counts as invested because I invested it. It's flagged because nobody received it."
   },

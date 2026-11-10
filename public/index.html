@@ -46,13 +46,13 @@ const TIPVESTING = {
     positionAsOf: "November 10, 2026",
     monthsTracked: 14,
     totalTipped: 1560.07,         // recounted from line items Nov 6 (Mar and Aug corrected)
-    phantom: 139.05,             // Japan phantom tips (60 receipts) — nobody received them; $120.75 invested so far
-    totalInvested: 1547.77,      // through the Nov 10 buy (Oct tips $115.44 + Oct dividend $2.94 = $118.38); $12.30 recount top-up still owed
-    bookValue: 1570.15,          // brokerage Nov 10: total value $1,715.25 less all-time return $145.10 (avg cost $71.37)
+    phantom: 139.05,             // Japan phantom tips (60 receipts) — nobody received them; fully invested after the Nov 10 net top-up
+    totalInvested: 1560.07,      // caught up: Oct tips + Oct dividend bought Nov 10, plus the $12.30 recount top-up (0.1577 sh @ $77.98)
+    bookValue: 1582.45,          // brokerage book $1,570.15 (value $1,715.25 less return $145.10) + $12.30 top-up
     dividends: 22.17,            // TFSA payments Nov 2025 → Oct 2026
     dividendsReinvested: 22.17,
-    shares: 22.0017,             // 20.4848 + 1 @ $78.03 + 0.5169 @ $78.05
-    marketValue: 1715.25,         // brokerage total value, Nov 10
+    shares: 22.1594,             // 20.4848 + 1 @ $78.03 + 0.5169 @ $78.05 + 0.1577 @ $77.98
+    marketValue: 1727.55,         // brokerage value $1,715.25 + top-up shares at their $77.98 fill (estimate; refresh from brokerage)
     holding: "VDY",
     // Grouped by payment month. Jan 2026 combines two payments ($0.41 + $0.59).
     dividendHistory: [
@@ -69,7 +69,7 @@ const TIPVESTING = {
       { label:"Sep 2026", short:"Sep", amount:3.43 },
       { label:"Oct 2026", short:"Oct", amount:2.94 }
     ],
-    note: "March 2026 includes $139.05 in phantom tips — money I would have tipped in Canada but didn't in Japan, worked out at my usual rates. It's flagged because nobody received it. I invested $120.75 of it at the time; a recount on November 6 found $18.30 more, and August turned out to be over-counted by $6.00. The $12.30 difference is the “waiting” amount above, still to be invested."
+    note: "March 2026 includes $139.05 in phantom tips — money I would have tipped in Canada but didn't in Japan, worked out at my usual rates. It's flagged because nobody received it. I invested $120.75 of it at the time. A recount on November 6 found $18.30 more phantom tips, and August turned out to be over-counted by $6.00, so I topped up the net $12.30 on November 10."
   },
 
   // Launch switches — flip these on when there is real content to back them.

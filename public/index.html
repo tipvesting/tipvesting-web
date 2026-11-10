@@ -41,18 +41,18 @@ const TIPVESTING = {
   },
 
   ledger: {
-    draft: false,                // position per brokerage Nov 4 2026; tips/dividends through Sept
-    lastUpdated: "September 2026",
-    positionAsOf: "November 4, 2026",
-    monthsTracked: 13,
-    totalTipped: 1432.33,
-    phantom: 120.75,             // Japan phantom tips — invested, but nobody received them
-    totalInvested: 1432.33,      // fully caught up: Sept's $157.50 (incl. $5 Lyft) went in with the Oct buy
-    bookValue: 1451.96,          // 20.4848 sh x $70.88 avg per brokerage
-    dividends: 19.23,            // TFSA payments Nov 2025 → Sept 2026
-    dividendsReinvested: 19.23,
-    shares: 20.4848,
-    marketValue: 1617.68,
+    draft: false,                // tips/dividends through Oct 2026 (recounted Nov 6); position as of the Nov 10 buy
+    lastUpdated: "October 2026",
+    positionAsOf: "November 10, 2026",
+    monthsTracked: 14,
+    totalTipped: 1560.07,         // recounted from line items Nov 6 (Mar and Aug corrected)
+    phantom: 139.05,             // Japan phantom tips (60 receipts) — nobody received them; $120.75 invested so far
+    totalInvested: 1547.77,      // through the Nov 10 buy (Oct tips $115.44 + Oct dividend $2.94 = $118.38); $12.30 recount top-up still owed
+    bookValue: 1570.34,          // brokerage book value Nov 4 ($1,451.96) + the $118.38 buy
+    dividends: 22.17,            // TFSA payments Nov 2025 → Oct 2026
+    dividendsReinvested: 22.17,
+    shares: 22.0017,             // 20.4848 + 1 @ $78.03 + 0.5169 @ $78.05
+    marketValue: 1717.23,         // 22.0017 sh x $78.05 (the Nov 10 fill price)
     holding: "VDY",
     // Grouped by payment month. Jan 2026 combines two payments ($0.41 + $0.59).
     dividendHistory: [
@@ -66,9 +66,10 @@ const TIPVESTING = {
       { label:"Jun 2026", short:"Jun", amount:2.27 },
       { label:"Jul 2026", short:"Jul", amount:2.45 },
       { label:"Aug 2026", short:"Aug", amount:3.24 },
-      { label:"Sep 2026", short:"Sep", amount:3.43 }
+      { label:"Sep 2026", short:"Sep", amount:3.43 },
+      { label:"Oct 2026", short:"Oct", amount:2.94 }
     ],
-    note: "March 2026 includes $120.75 in phantom tips — money I would have tipped in Canada but didn't in Japan, worked out at my usual rates and invested anyway. It counts as invested because I invested it. It's flagged because nobody received it."
+    note: "March 2026 includes $139.05 in phantom tips — money I would have tipped in Canada but didn't in Japan, worked out at my usual rates. It's flagged because nobody received it. I invested $120.75 of it at the time; a recount on November 6 found $18.30 more, and August turned out to be over-counted by $6.00. The $12.30 difference is the “waiting” amount above, still to be invested."
   },
 
   // Launch switches — flip these on when there is real content to back them.
@@ -93,7 +94,7 @@ const TIPVESTING = {
 
     { status:"soon", tag:"Travel", date:"", url:"", image:"", popular:true,
       title:"16 days in Japan. Almost no tipping. Here's the bill I didn't get.",
-      blurb:"67 transactions with my usual Canadian percentages applied on top. The phantom total was not small." },
+      blurb:"60 transactions with my usual Canadian percentages applied on top. The phantom total was not small." },
 
     { status:"soon", tag:"Tipflation", date:"", url:"", image:"", popular:false,
       title:"The tip screen came for the birthday party",
@@ -926,11 +927,14 @@ a.post:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color
     const amounts = DV.map(d=>d.amount);
     const total = amounts.reduce((a,b)=>a+b,0);
     const latest = amounts[amounts.length-1], first = amounts[0], max = Math.max(...amounts);
+    const prev = amounts.length > 1 ? amounts[amounts.length-2] : null;
+    const dip = (prev !== null && latest < prev)
+      ? ` Payouts do move around: ${DV[DV.length-1].label.split(" ")[0]} came in at ${money(latest)}, down from ${money(prev)}.` : "";
     const host = $("divi");
     if(!host.dataset.built){
       host.innerHTML = `
         <h3>Dividends, growing on their own</h3>
-        <p class="sub">Every distribution gets reinvested rather than pocketed, so the position buys a little more of itself each month. The climb is mostly me adding shares, not the fund paying more.</p>
+        <p class="sub">Every distribution gets reinvested rather than pocketed, so the position buys a little more of itself each month. The climb is mostly me adding shares, not the fund paying more.${dip}</p>
         <div class="divi-stats">
           <div class="stat"><div class="n">${money(total)}</div><div class="l">Received to date</div></div>
           <div class="stat"><div class="n">${money(latest)}</div><div class="l">Latest month</div></div>
@@ -952,15 +956,18 @@ a.post:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color
       const last = i===DV.length-1;
       const showLbl = !everyOther || i%2===(DV.length-1)%2;
       const valTxt = slot >= 56 ? money(d.amount) : d.amount.toFixed(2);
+      // On narrow screens, lift the latest label above a taller neighbour so it never crowds that bar.
+      const prevTop = (everyOther && i>0 && max) ? BASE-(DV[i-1].amount/max)*TOP : y;
+      const ly = Math.min(y, prevTop);
       return `<g>
         <rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(h,2).toFixed(1)}" rx="4"
               fill="${last?'var(--amber)':'var(--leaf-mid)'}" opacity="${last?1:0.85}"><title>${d.label}: ${money(d.amount)}</title></rect>
-        ${last?`<text class="lbl-v" x="${(x+bw/2).toFixed(1)}" y="${(y-7).toFixed(1)}" text-anchor="middle">${money(d.amount)}</text>`
+        ${last?`<text class="lbl-v" x="${(x+bw/2+19 > W ? W-1 : x+bw/2).toFixed(1)}" y="${(ly-7).toFixed(1)}" text-anchor="${x+bw/2+19 > W ? 'end' : 'middle'}">${money(d.amount)}</text>`
               :(showLbl?`<text class="lbl-m" x="${(x+bw/2).toFixed(1)}" y="${(y-6).toFixed(1)}" text-anchor="middle">${valTxt}</text>`:"")}
         ${showLbl?`<text class="lbl-x" x="${(x+bw/2).toFixed(1)}" y="${H-10}" text-anchor="middle">${d.short}</text>`:""}
       </g>`;
     }).join("");
-    box.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Monthly dividend payments from ${DV[0].label} to ${DV[DV.length-1].label}, rising from ${money(first)} to ${money(latest)}">
+    box.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Monthly dividend payments from ${DV[0].label} to ${DV[DV.length-1].label}, from ${money(first)} to ${money(latest)}, peaking at ${money(max)}">
       <line x1="0" y1="${BASE}" x2="${W}" y2="${BASE}" stroke="var(--line)" stroke-width="1.5"/>${bars}</svg>`;
   }
   renderDividends();
